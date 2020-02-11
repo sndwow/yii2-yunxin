@@ -1,0 +1,27 @@
+{
+    "name": "sndwow/yii2-yunxin",
+    "description": "在Yii2中更好的使用云信组件",
+    "type": "yii2-extension",
+    "keywords": [
+        "yii2",
+        "extension"
+    ],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "sndwow",
+            "email": "thmod@qq.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0",
+        "yiisoft/yii2": "~2.0.0",
+        "yiisoft/yii2-httpclient": "^2.0",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "sndwow\\yunxin\\": "src"
+        }
+    }
+}
