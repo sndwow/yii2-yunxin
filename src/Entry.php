@@ -68,7 +68,7 @@ class Entry extends Component
     private function factory($className)
     {
         if (empty($this->instances[$className])) {
-            $this->instances[$className] = new  $this->classMap[$className]($this->appKey, $this->appSecret);
+            $this->instances[$className] = new  $this->classMap[$className]($this->appKey, $this->appSecret, $this->timeout);
         }
         return $this->instances[$className];
     }
