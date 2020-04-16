@@ -20,7 +20,7 @@ class Base
     /**
      * @var string
      */
-    private $appSecrt;
+    private $appSecret;
     
     /**
      * @var int
@@ -30,7 +30,7 @@ class Base
     public function __construct($appKey, $appSecrt, $timeout)
     {
         $this->appKey = $appKey;
-        $this->appSecrt = $appSecrt;
+        $this->appSecret = $appSecrt;
         $this->timeout = $timeout;
     }
     
@@ -56,7 +56,7 @@ class Base
                 'AppKey' => $this->appKey,
                 'Nonce' => $nonceStr,
                 'CurTime' => $curTime,
-                'CheckSum' => sha1($this->appSecrt.$nonceStr.$curTime),
+                'CheckSum' => sha1($this->appSecret.$nonceStr.$curTime),
             ],
             ['timeout' => $this->timeout]
         )->send();
