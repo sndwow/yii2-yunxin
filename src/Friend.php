@@ -23,13 +23,13 @@ class Friend extends Base
      */
     public function add($accid, $faccid, $type, $msg = '', $serverex = '')
     {
-        $this->send('friend/add.action', array_filter([
+        $this->send('friend/add.action', [
             'accid' => $accid,
             'faccid' => $faccid,
             'type' => $type,
             'msg' => $msg,
             'serverex' => $serverex,
-        ]));
+        ]);
     }
     
     /**
@@ -45,13 +45,13 @@ class Friend extends Base
      */
     public function update($accid, $faccid, $alias = '', $ex = '', $serverex = '')
     {
-        $this->send('friend/update.action', array_filter([
+        $this->send('friend/update.action', [
             'accid' => $accid,
             'faccid' => $faccid,
             'alias' => $alias,
             'ex' => $ex,
             'serverex' => $serverex,
-        ]));
+        ]);
     }
     
     /**
