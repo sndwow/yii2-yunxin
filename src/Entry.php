@@ -6,10 +6,14 @@ use yii\base\Component;
 
 /**
  * 文件入口
+ *
+ * @property User $user 用户
+ * @property Msg $msg  消息
+ * @property Friend $friend  好友
+ * @property Chatroom $chatroom  好友
  */
 class Entry extends Component
 {
-    
     /**
      * 网易云信分配的账号
      *
@@ -31,48 +35,6 @@ class Entry extends Component
      */
     public $timeout = 5;
     
-    private $instances = [];
-    
-    private $classMap = [
-        'user' => User::class,
-        'msg' => Msg::class,
-        'friend' => Friend::class,
-    ];
-    
-    
-    /**
-     * @return User
-     */
-    public function user()
-    {
-        return $this->factory('user');
-    }
-    
-    /**
-     * @return Msg
-     */
-    public function msg()
-    {
-        return $this->factory('msg');
-    }
-    
-    /**
-     *
-     * @return Friend
-     */
-    public function friend()
-    {
-        return $this->factory('friend');
-    }
-    
-    private function factory($className)
-    {
-        if (empty($this->instances[$className])) {
-            $this->instances[$className] = new  $this->classMap[$className]($this->appKey, $this->appSecret, $this->timeout);
-        }
-        return $this->instances[$className];
-    }
-    
     /**
      * 抄送消息验证检验码
      *
@@ -87,5 +49,23 @@ class Entry extends Component
         return sha1($this->appSecret.md5($body).$curTime) === $checksumPost;
     }
     
+    public function getUser()
+    {
+        return new User(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+    }
     
+    public function getFriend()
+    {
+        return new Friend(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+    }
+    
+    public function getMsg()
+    {
+        return new Msg(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+    }
+    
+    public function getChatroom()
+    {
+        return new Chatroom(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+    }
 }

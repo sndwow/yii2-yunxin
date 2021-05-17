@@ -2,7 +2,6 @@
 
 namespace sndwow\yunxin;
 
-
 use Exception;
 
 /**
@@ -108,7 +107,6 @@ class Friend extends Base
             'value' => $value,
         ]);
     }
-    
     
     /**
      * 查看指定用户的黑名单和静音列表

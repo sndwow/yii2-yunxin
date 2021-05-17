@@ -2,7 +2,6 @@
 
 namespace sndwow\yunxin;
 
-
 use Exception;
 
 /**
@@ -45,7 +44,6 @@ class User extends Base
         return $ret['info'];
     }
     
-    
     /**
      * 更新网易云通信token，可以对accid更新到指定的token，更新后请开发者务必做好本地的维护
      *
@@ -58,7 +56,6 @@ class User extends Base
     {
         $this->send('user/update.action', ['accid' => $accid, 'token' => $token]);
     }
-    
     
     /**
      * 封禁网易云通信ID
@@ -77,7 +74,6 @@ class User extends Base
     {
         $this->send('user/block.action', ['accid' => $accid, 'needkick' => $needkick]);
     }
-    
     
     /**
      * 解禁网易云通信ID
@@ -134,7 +130,6 @@ class User extends Base
         return $ret['uinfos'];
     }
     
-    
     /**
      * 设置桌面端在线时，移动端是否需要推送
      *
@@ -148,7 +143,6 @@ class User extends Base
         $this->send('user/setDonnop.action', ['accid' => $accid, 'donnopOpen' => $donnopOpen]);
     }
     
-    
     /**
      * 账号全局禁言
      *
@@ -161,7 +155,6 @@ class User extends Base
     {
         $this->send('user/mute.action', ['accid' => $accid, 'mute' => $mute]);
     }
-    
     
     /**
      * 账号全局禁用音视频

@@ -4,35 +4,27 @@ namespace sndwow\yunxin;
 
 use Exception;
 use Yii;
+use yii\base\Component;
 use yii\httpclient\Client;
 
-/**
- */
-class Base
+abstract class Base extends Component
 {
     private $baseUrl = 'https://api.netease.im/nimserver/';
     
     /**
      * @var string
      */
-    private $appKey;
+    public $appKey;
     
     /**
      * @var string
      */
-    private $appSecret;
+    public $appSecret;
     
     /**
      * @var int
      */
-    private $timeout;
-    
-    public function __construct($appKey, $appSecrt, $timeout)
-    {
-        $this->appKey = $appKey;
-        $this->appSecret = $appSecrt;
-        $this->timeout = $timeout;
-    }
+    public $timeout;
     
     /**
      * 发送请求
@@ -85,7 +77,7 @@ class Base
         foreach ($data as &$datum) {
             if (is_bool($datum)) {
                 $datum = $datum ? 'true' : 'false';
-            } else if (is_array($datum)) {
+            } elseif (is_array($datum)) {
                 $datum = $this->bool2String($datum);
             }
         }

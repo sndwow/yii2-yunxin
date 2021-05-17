@@ -2,7 +2,6 @@
 
 namespace sndwow\yunxin;
 
-
 use Exception;
 
 /**
@@ -142,7 +141,6 @@ class Msg extends Base
         ]));
     }
     
-    
     /**
      * 批量发送点对点自定义系统通知
      *
@@ -172,7 +170,6 @@ class Msg extends Base
         ]));
     }
     
-    
     /**
      * 对在应用内的用户发送广播消息
      *
@@ -193,7 +190,6 @@ class Msg extends Base
     {
         $this->send('msg/broadcastMsg.action', array_merge($options, ['body' => $body]));
     }
-    
     
     /**
      * 生成文本消息
@@ -309,7 +305,6 @@ class Msg extends Base
     {
         return json_encode(['name' => $name, 'md5' => $md5, 'url' => $url, 'ext' => $ext, 'size' => $size]);
     }
-    
     
     /**
      * 系统通知的附加选项
