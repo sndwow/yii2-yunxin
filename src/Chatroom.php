@@ -187,4 +187,34 @@ class Chatroom extends Base
         $this->send('chatroom/queueInit.action', ['roomid' => $roomid, 'sizeLimit' => $sizeLimit]);
     }
     
+    /**
+     * 往聊天室有序队列中新加或更新元素
+     *
+     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
+     *
+     * @param int $roomid 聊天室id
+     * @param string $key elementKey,新元素的UniqKey,长度限制128字符
+     * @param string $value elementValue,新元素内容，长度限制4096字符
+     *
+     * @param string $operator 提交这个新元素的操作者accid，默认为该聊天室的创建者，若operator对应的帐号不存在，会返回404错误。
+     * 若指定的operator不在线，则添加元素成功后的通知事件中的操作者默认为聊天室的创建者；若指定的operator在线，则通知事件的操作者为operator。
+     *
+     * @param bool $transient
+     * 这个新元素的提交者operator的所有聊天室连接在从该聊天室掉线或者离开该聊天室的时候，提交的元素是否需要删除。
+     * true：需要删除；false：不需要删除。默认false。
+     * 当指定该参数为true时，若operator当前不在该聊天室内，则会返回403错误。
+     *
+     * @throws Exception
+     */
+    public function queueOffer(int $roomid, string $key, string $value, string $operator = '', bool $transient = false)
+    {
+        
+        $data = ['roomid' => $roomid, 'key' => $key, 'value' => $value, 'transient' => $transient];
+        if ($operator) {
+            $data['operator'] = $operator;
+        }
+        
+        $this->send('chatroom/queueOffer.action', $data);
+    }
+    
 }
