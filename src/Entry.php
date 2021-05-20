@@ -36,6 +36,32 @@ class Entry extends Component
     public $timeout = 5;
     
     /**
+     * 组件队列ID
+     * 用于定义异步调用时，消息默认推送到哪个yii组件队列
+     *
+     * @var string
+     */
+    public $queueId;
+    
+    /**
+     * 构建类的数据
+     *
+     * @var array
+     */
+    private $constructData;
+    
+    public function init()
+    {
+        parent::init();
+        $this->constructData = [
+            'appKey' => $this->appKey,
+            'appSecret' => $this->appSecret,
+            'timeout' => $this->timeout,
+            'defaultQueueId' => $this->queueId,
+        ];
+    }
+    
+    /**
      * 抄送消息验证检验码
      *
      * @param $body
@@ -51,21 +77,22 @@ class Entry extends Component
     
     public function getUser()
     {
-        return new User(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return new User($this->constructData);
     }
     
     public function getFriend()
     {
-        return new Friend(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return new Friend($this->constructData);
     }
     
     public function getMsg()
     {
-        return new Msg(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return new Msg($this->constructData);
     }
     
     public function getChatroom()
     {
-        return new Chatroom(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return new Chatroom($this->constructData);
     }
+    
 }

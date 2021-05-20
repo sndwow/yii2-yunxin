@@ -41,7 +41,7 @@ class User extends Base
     {
         $ret = $this->send('user/create.action', array_merge($options, ['accid' => $accid]));
         
-        return $ret['info'];
+        return $ret['info'] ?? [];
     }
     
     /**
@@ -127,7 +127,7 @@ class User extends Base
     public function getUserInfos(array $accids)
     {
         $ret = $this->send('user/getUinfos.action', ['accids' => json_encode($accids)]);
-        return $ret['uinfos'];
+        return $ret['uinfos'] ?? [];
     }
     
     /**

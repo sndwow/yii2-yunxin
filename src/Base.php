@@ -5,6 +5,7 @@ namespace sndwow\yunxin;
 use Exception;
 use Yii;
 use yii\base\Component;
+use yii\base\InvalidConfigException;
 use yii\httpclient\Client;
 
 abstract class Base extends Component
@@ -27,6 +28,40 @@ abstract class Base extends Component
     public $timeout;
     
     /**
+     * @var string 默认队列
+     */
+    public $defaultQueueId;
+    
+    /**
+     * 此刻要发送的队列，空标识不发送队列
+     *
+     * @var string
+     */
+    private $curQueueId;
+    
+    /**
+     * 设置本次消息发送为异步消息，消息将被推送到指定组件的队列中
+     * 异步发送时，所有接口都返回空值
+     *
+     * @param string $queueId Yii队列组件id，若不指定则使用默认组件id，若组件不存在则报错
+     *
+     * @return $this
+     * @throws InvalidConfigException
+     */
+    public function async(string $queueId = '')
+    {
+        $this->curQueueId = $queueId ?: $this->defaultQueueId;
+        
+        $id = $this->curQueueId;
+        
+        if (empty(Yii::$app->$id)) {
+            throw new InvalidConfigException('云信异步组件无效');
+        }
+        
+        return $this;
+    }
+    
+    /**
      * 发送请求
      *
      * @param string $uri
@@ -35,8 +70,19 @@ abstract class Base extends Component
      * @return array
      * @throws Exception
      */
-    protected function send($uri, array $data):array
+    protected function send(string $uri, array $data):array
     {
+        // 异步发送
+        if ($this->curQueueId) {
+            $id = $this->curQueueId;
+            
+            /* @var \yii\queue\amqp_interop\Queue $c */
+            $c = Yii::$app->$id;
+            $c->push(['method' => $uri, 'data' => $data]);
+            $this->curQueueId = '';
+            return [];
+        }
+        
         // checksum校验生成
         $nonceStr = Yii::$app->getSecurity()->generateRandomString(128);
         $curTime = (string)time();

@@ -73,7 +73,7 @@ class Msg extends Base
          *    "antispam":false
          *   }
          */
-        return $ret['data'];
+        return $ret['data'] ?? [];
     }
     
     /**

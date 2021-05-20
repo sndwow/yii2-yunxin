@@ -84,7 +84,7 @@ class Friend extends Base
     public function get(string $accid, int $updatetime)
     {
         $ret = $this->send('friend/get.action', ['accid' => $accid, 'updatetime' => $updatetime]);
-        return $ret['friends'];
+        return $ret['friends'] ?? [];
     }
     
     /**
@@ -119,6 +119,11 @@ class Friend extends Base
     public function listBlackAndMuteList(string $accid)
     {
         $res = $this->send('user/listBlackAndMuteList.action', ['accid' => $accid]);
+    
+        if (empty($res)) {
+            return [];
+        }
+    
         return [
             'mutelist' => $res['mutelist'], //被静音的帐号列表
             'blacklist' => $res['blacklist'] //加黑的帐号列表
