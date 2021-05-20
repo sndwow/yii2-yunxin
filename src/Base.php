@@ -72,37 +72,35 @@ abstract class Base extends Component
      */
     protected function send(string $uri, array $data):array
     {
+    
+        $data = $this->bool2String($data);
+    
         // 异步发送
         if ($this->curQueueId) {
             $id = $this->curQueueId;
-            
+        
             /* @var \yii\queue\amqp_interop\Queue $c */
             $c = Yii::$app->$id;
             $c->push(['method' => $uri, 'data' => $data]);
             $this->curQueueId = '';
             return [];
         }
-        
+    
         // checksum校验生成
         $nonceStr = Yii::$app->getSecurity()->generateRandomString(128);
         $curTime = (string)time();
-        
-        $response = (new Client())->post(
-            $this->baseUrl.$uri,
-            $this->bool2String($data),
-            [
-                'AppKey' => $this->appKey,
-                'Nonce' => $nonceStr,
-                'CurTime' => $curTime,
-                'CheckSum' => sha1($this->appSecret.$nonceStr.$curTime),
-            ],
-            ['timeout' => $this->timeout]
-        )->send();
-        
+    
+        $response = (new Client())->post($this->baseUrl.$uri, $data, [
+            'AppKey' => $this->appKey,
+            'Nonce' => $nonceStr,
+            'CurTime' => $curTime,
+            'CheckSum' => sha1($this->appSecret.$nonceStr.$curTime),
+        ], ['timeout' => $this->timeout])->send();
+    
         if ($response->getStatusCode() != 200) {
             throw new Exception('NetEase Network Error: '.$response->getStatusCode());
         }
-        
+    
         $arr = json_decode($response->getContent(), true);
         if (!isset($arr['code']) || $arr['code'] != 200) {
             throw new Exception('NetEase response error：'.$response->getContent());
