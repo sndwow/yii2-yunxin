@@ -29,7 +29,7 @@ class Chatroom extends Base
     public function create(string $creator, string $name, array $options = [])
     {
         $ret = $this->send('chatroom/create.action', array_merge($options, ['creator' => $creator, 'name' => $name]));
-        return $ret['chatroom'];
+        return $ret['chatroom'] ?? null;
     }
     
     /**
@@ -46,7 +46,7 @@ class Chatroom extends Base
     public function get(int $roomid, bool $needOnlineUserCount)
     {
         $ret = $this->send('chatroom/get.action', ['creator' => $roomid, 'needOnlineUserCount' => $needOnlineUserCount]);
-        return $ret['chatroom'];
+        return $ret['chatroom'] ?? null;
     }
     
     /**
@@ -63,7 +63,7 @@ class Chatroom extends Base
     public function update(int $roomid, array $options = [])
     {
         $ret = $this->send('chatroom/update.action', array_merge($options, ['roomid' => $roomid]));
-        return $ret['chatroom'];
+        return $ret['chatroom'] ?? null;
     }
     
     /**
@@ -81,7 +81,7 @@ class Chatroom extends Base
     public function toggleCloseStat(int $roomid, string $operator, bool $valid)
     {
         $ret = $this->send('chatroom/toggleCloseStat.action', ['roomid' => $roomid, 'operator' => $operator, 'valid' => $valid]);
-        return $ret['desc'];
+        return $ret['desc'] ?? null;
     }
     
     /**
@@ -115,7 +115,7 @@ class Chatroom extends Base
             'optvalue' => $optvalue,
             'notifyExt' => $notifyExt,
         ]);
-        return $ret['desc'];
+        return $ret['desc'] ?? null;
     }
     
     /**
@@ -139,7 +139,7 @@ class Chatroom extends Base
             'msgType' => $msgType,
             'msgId' => $options['msgId'] ?? Yii::$app->security->generateRandomString(),
         ]));
-        return $ret['desc'];
+        return $ret['desc'] ?? null;
     }
     
     /**
@@ -155,7 +155,7 @@ class Chatroom extends Base
     public function queuePoll(int $roomid)
     {
         $ret = $this->send('chatroom/queueList.action', ['roomid' => $roomid]);
-        return $ret['desc']['list'] ?? [];
+        return $ret['desc']['list'] ?? null;
     }
     
     /**
