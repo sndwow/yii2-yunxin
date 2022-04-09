@@ -217,4 +217,57 @@ class Chatroom extends Base
         $this->send('chatroom/queueOffer.action', $data);
     }
     
+    /**
+     * 变更聊天室内的角色信息
+     *
+     * @see https://doc.yunxin.163.com/docs/TM5MzM5Njk/TYyMDI1MTg?platformId=60353#%E5%8F%98%E6%9B%B4%E8%81%8A%E5%A4%A9%E5%AE%A4%E5%86%85%E7%9A%84%E8%A7%92%E8%89%B2%E4%BF%A1%E6%81%AF
+     *
+     * @param int $roomid
+     * @param string $accid
+     * @param array $options
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function updateMyRoomRole(int $roomid, string $accid, array $options = [])
+    {
+        $data = array_merge($options, ['roomid' => $roomid, 'accid' => $accid]);
+        $this->send('chatroom/updateMyRoomRole.action', $data);
+    }
+    
+    /**
+     * 关闭指定聊天室进出通知
+     *
+     * @see https://doc.yunxin.163.com/docs/TM5MzM5Njk/TYyMDI1MTg?platformId=60353#%E5%85%B3%E9%97%AD%E6%8C%87%E5%AE%9A%E8%81%8A%E5%A4%A9%E5%AE%A4%E8%BF%9B%E5%87%BA%E9%80%9A%E7%9F%A5
+     *
+     * @param int $roomid
+     * @param bool $close
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function updateInOutNotification(int $roomid, bool $close)
+    {
+        $this->send('chatroom/updateInOutNotification.action', ['roomid' => $roomid, 'close' => $close]);
+    }
+    
+    /**
+     * 聊天室全服广播消息
+     *
+     * @see https://doc.yunxin.163.com/docs/TM5MzM5Njk/TYyMDI1MTg?platformId=60353#聊天室全服广播消息
+     *
+     * @param int $msgId
+     * @param string $fromAccid
+     * @param int $msgType
+     * @param array $options
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function broadcast(int $msgId, string $fromAccid, int $msgType, array $options = [])
+    {
+        $data = array_merge($options, ['msgId' => $msgId, 'fromAccid' => $fromAccid, 'msgType' => $msgType]);
+        $this->send('chatroom/broadcast.action', $data);
+    }
+    
 }

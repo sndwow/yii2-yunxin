@@ -67,10 +67,10 @@ abstract class Base extends Component
      * @param string $uri
      * @param array $data
      *
-     * @return array
+     * @return array|null
      * @throws Exception
      */
-    protected function send(string $uri, array $data):array
+    protected function send(string $uri, array $data)
     {
     
         $data = $this->bool2String($data);
@@ -83,7 +83,7 @@ abstract class Base extends Component
             $c = Yii::$app->$id;
             $c->push(['method' => $uri, 'data' => $data]);
             $this->curQueueId = '';
-            return [];
+            return null;
         }
     
         // checksum校验生成
