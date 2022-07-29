@@ -1,172 +1,346 @@
 <?php
+/**
+ *  author: youwei
+ *  date: 7/29/2022
+ */
 
 namespace sndwow\yunxin;
 
 use Exception;
+use yii\helpers\ArrayHelper;
 
 /**
- * 用户管理
+ * 用户
  */
 class User extends Base
 {
     /**
-     * 创建网易云通信ID
+     * 创建用户
      *
-     * @param string $accid 网易云通信ID，最大长度32字符，必须保证一个APP内唯一。
-     * （只允许字母、数字、半角下划线_、@、半角点以及半角-组成，不区分大小写，会统一小写处理，请注意以此接口返回结果中的accid为准）
+     * @param string $accid 账户id，最大长度32字符，必须保证一个APP内唯一。
      * @param array $options 可选参数集合，支持如下：
      *
-     * - name: string, 网易云通信ID昵称，最大长度64字符。
-     *
-     * - icon: string, 网易云通信ID头像URL，开发者可选填，最大长度1024
-     *
-     * - token: string,  网易云通信ID可以指定登录token值，最大长度128字符，并更新，如果未指定，会自动生成token，并在创建成功后返回
-     *
+     * - name: string, 昵称，最大长度64字符。
+     * - icon: string, 头像URL，开发者可选填，最大长度1024
+     * - token: string,  登录token值，最大长度128字符，并更新，如果未指定，会自动生成token
      * - sign: string, 用户签名，最大长度256字符
-     *
      * - email: string, 用户email，最大长度64字符
-     *
      * - birth: string, 用户生日，最大长度16字符
-     *
-     * - mobile: string, 用户mobile，最大长度32字符，非中国大陆手机号码需要填写国家代码(如美国：+1-xxxxxxxxxx)或地区代码(如香港：+852-xxxxxxxx)
-     *
+     * - mobile: string, 用户mobile，最大长度32字符
      * - gender: int, 用户性别，0表示未知，1表示男，2女表示女，其它会报参数错误
-     *
      * - ex: string, 用户名片扩展字段，最大长度1024字符，用户可自行扩展，建议封装成JSON字符串
-     *
-     * @return array 内容 ["token"=>"xx","accid"=>"xx","name"=>"xx"]
-     * @throws Exception
      */
     public function create(string $accid, array $options)
     {
-        $ret = $this->send('user/create.action', array_merge($options, ['accid' => $accid]));
-        
-        return $ret['info'] ?? null;
+         $this->post('user/create.action', ArrayHelper::merge($options, ['accid' => $accid]));
     }
     
     /**
-     * 更新网易云通信token，可以对accid更新到指定的token，更新后请开发者务必做好本地的维护
+     * 更新用户token
      *
-     * @param string $accid 网易云通信ID，最大长度32字符，必须保证一个APP内唯一
-     * @param string $token 网易云通信ID可以指定登录token值（即密码），最大长度128字符
-     *
-     * @throws Exception
+     * @param string $accid 账户id
+     * @param string $token 登录token值（即密码），最大长度128字符
      */
-    public function update(string $accid, string $token)
+    public function updateToken(string $accid, string $token)
     {
-        $this->send('user/update.action', ['accid' => $accid, 'token' => $token]);
+        $this->post('user/update.action', ['accid' => $accid, 'token' => $token]);
     }
     
     /**
-     * 封禁网易云通信ID
+     * 封禁用户
      *
-     * - 封禁网易云通信ID后，此ID将不能再次登录。若封禁时，该id处于登录状态，则当前登录不受影响，仍然可以收发消息。封禁效果会在下次登录时生效。
-     *   因此建议，将needkick设置为true，让该账号同时被踢出登录。
-     * - 封禁时踢出，会触发登出事件消息抄送。
-     * - 出于安全目的，账号创建后只能封禁，不能删除；封禁后账号仍计入应用内账号总数。
-     *
-     * @param string $accid 网易云通信ID，最大长度32字符，必须保证一个APP内唯一
-     * @param bool $needkick 是否踢掉被禁用户，true或false
-     *
-     * @throws Exception
+     * @param string $accid 账户id
+     * @param bool $needKick 是否踢出云信
      */
-    public function block(string $accid, bool $needkick = true)
+    public function block(string $accid, bool $needKick = true)
     {
-        $this->send('user/block.action', ['accid' => $accid, 'needkick' => $needkick]);
+        $this->post('user/block.action', ['accid' => $accid, 'needkick' => $needKick]);
     }
     
     /**
-     * 解禁网易云通信ID
-     *
-     * @param string $accid 网易云通信ID，最大长度32字符，必须保证一个APP内唯一
-     *
-     * @throws Exception
+     * 解禁用户
+     * @param string $accid 账户id
      */
     public function unblock(string $accid)
     {
-        $this->send('user/unblock.action', ['accid' => $accid]);
+        $this->post('user/unblock.action', ['accid' => $accid]);
     }
     
     /**
-     * 更新用户名片
+     * 禁言
      *
-     * @param string $accid 用户帐号，最大长度32字符，必须保证一个APP内唯一
+     * @param string $accid 账户id
+     * @param bool $isMute 是否禁言，true禁言，false解除禁言
+     */
+    public function mute(string $accid, bool $isMute)
+    {
+        $this->post('user/mute.action', ['accid' => $accid, 'mute' => $isMute]);
+    }
+    
+    /**
+     * 获取用户名片
+     *
+     * @param array $accids
+     *
+     * @return array
+     */
+    public function infoList(array $accids)
+    {
+        $ret = $this->post('user/getUinfos.action', ['accids' => json_encode($accids)]);
+        return $ret['uinfos'] ?? [];
+    }
+    
+    /**
+     * 更新用户信息
+     *
+     * @param string $accid 用户帐号id
      * @param array $options 可选参数集合，支持参数如下：
      *
-     * - name: string, 网易云通信ID昵称，最大长度64字符。
-     *
-     * - icon: string, 网易云通信ID头像URL，开发者可选填，最大长度1024
-     *
+     * - name: string, 昵称，最大长度64字符。
+     * - icon: string, 头像URL
      * - sign: string, 用户签名，最大长度256字符
-     *
      * - email: string, 用户email，最大长度64字符
-     *
      * - birth: string, 用户生日，最大长度16字符
-     *
-     * - mobile: string, 用户mobile，最大长度32字符，非中国大陆手机号码需要填写国家代码(如美国：+1-xxxxxxxxxx)或地区代码(如香港：+852-xxxxxxxx)
-     *
+     * - mobile: string, 用户mobile，最大长度32字符
      * - gender: int, 用户性别，0表示未知，1表示男，2女表示女，其它会报参数错误
-     *
      * - ex: string, 用户名片扩展字段，最大长度1024字符，用户可自行扩展，建议封装成JSON字符串
-     *
-     * @throws Exception
      */
     public function updateUserInfo(string $accid, array $options)
     {
-        $this->send('user/updateUinfo.action', array_merge($options, ['accid' => $accid]));
+        $this->post('user/updateUinfo.action', array_merge($options, ['accid' => $accid]));
     }
     
     /**
-     * 获取用户名片，可以批量
+     * 发送通知
      *
-     * @param array $accids 用户帐号（一次查询最多为200）
+     * @param string $fromAccid 发送者accid，用户帐号，最大32字符，APP内唯一
+     * @param string $toAccid 用户id
+     * @param string $attach 自定义通知内容
+     * @param array $options 可选参数集合，支持如下：
+     * - option: string, 指定消息计数等特殊行为,使用 self::noticeOption生成
+     * - pushcontent: string, 推送文案,最长500个字符，android以此为推送显示文案；ios若未填写payload，显示文案以pushcontent为准
+     * - payload: sting, ios 推送对应的payload,必须是JSON,不能超过2k字符
+     * - sound: string, 如果有指定推送，此属性指定为客户端本地的声音文件名，长度不要超过30个字符，如果不指定，会使用默认声音
+     * - save: int, 1表示只发在线，2表示会存离线，其他会报414错误。默认会存离线
+     */
+    public function sendNotice(string $fromAccid, string $toAccid, string $attach, array $options = [])
+    {
+        $this->post('msg/sendAttachMsg.action', array_merge($options, [
+            'from' => $fromAccid,
+            'msgtype' => 0,
+            'to' => $toAccid,
+            'attach' => $attach,
+        ]));
+    }
+    
+    /**
+     * 发送通知 - 批量
+     *
+     * @param string $fromAccid 发送者accid，用户帐号，最大32字符，APP内唯一
+     * @param array $toAccidList 接收者 最大限500人
+     * @param string $attach 自定义通知内容，第三方组装的字符串，建议是JSON串，最大长度4096字符
+     * @param array $options 可选参数集合，支持以下选项:
+     *
+     * - option: string, 指定消息计数等特殊行为,使用 self::noticeOption生成
+     * - pushcontent: string, 推送文案,最长500个字符，android以此为推送显示文案；ios若未填写payload，显示文案以pushcontent为准
+     * - payload: sting, ios 推送对应的payload,必须是JSON,不能超过2k字符
+     * - sound: string, 如果有指定推送，此属性指定为客户端本地的声音文件名，长度不要超过30个字符，如果不指定，会使用默认声音
+     * - save: int, 1表示只发在线，2表示会存离线，其他会报414错误。默认会存离线
+     */
+    public function sendNoticeBatch(string $fromAccid, array $toAccidList, string $attach, array $options = [])
+    {
+        $this->post('msg/sendBatchAttachMsg.action', array_merge($options, [
+            'fromAccid' => $fromAccid,
+            'toAccids' => json_encode($toAccidList),
+            'attach' => $attach,
+        ]));
+    }
+    
+    /**
+     * 发送p2p消息
+     *
+     * @param string $fromAccid 发送者accid
+     * @param string $toAccid 用户id
+     * @param int $msgType 消息类型
+     * @param string $body 消息内容
+     * @param array $options 可选参数集合，支持如下：
+     *
+     * - antispam: bool, 对于对接了易盾反垃圾功能的应用。true或false, 默认false。 只对消息类型为：100 自定义消息类型 的消息生效。
+     * - option: string, 指定消息的漫游，存云端历史，发送方多端同步，推送，消息抄送等特殊行为,使用 self::chatOption
+     * - pushcontent: string, 推送文案,最长500个字符，android以此为推送显示文案；ios若未填写payload，显示文案以pushcontent为准
+     * - payload: sting, ios 推送对应的payload,必须是JSON,不能超过2k字符
+     * - ext: string, 开发者扩展字段，长度限制1024字符
+     * - forcepushlist: string
+     * - forcepushcontent: string, 发送群消息时，针对强推列表forcepushlist中的用户，强制推送的内容
+     * - forcepushall: bool, 发送群消息时，强推列表是否为群里除发送者外的所有有效成员，true或false，默认为false
+     * - bid: string, 反垃圾业务ID，实现“单条消息配置对应反垃圾”，若不填则使用原来的反垃圾配置
+     * - useYidun: int, 单条消息是否使用易盾反垃圾
+     * - markRead: int, 群消息是否需要已读业务（仅对群消息有效），0:不需要，1:需要
+     * - checkFriend: bool, 是否为好友关系才发送消息，默认false，注：使用该参数需要先开通功能服务
+     *
+     * @return string 消息id
+     * @throws Exception
+     */
+    public function sendP2p(string $fromAccid, string $toAccid, int $msgType, string $body, array $options = [])
+    {
+        $ret = $this->post('msg/sendMsg.action', array_merge($options, [
+            'from' => $fromAccid,
+            'ope' => 0,
+            'to' => $toAccid,
+            'type' => $msgType,
+            'body' => $body,
+        ]));
+        return (string)($ret['data']['msgid'] ?? '');
+    }
+    
+    /**
+     * 发送p2p消息 - 批量
+     *
+     * @param string $fromAccid 发送者accid，用户帐号，最大32字符，必须保证一个APP内唯一
+     * @param array $toAccidList 接受者数组，限500人
+     * @param int $type 消息类型 对应self::MSG_TYPE_*
+     * @param string $body 消息内容，最大长度5000字符，JSON格式
+     * @param array $options 可选参数，支持如下
+     *
+     * - option: string, 指定消息的漫游，存云端历史，发送方多端同步，推送，消息抄送等特殊行为,使用 self::chatOption
+     * - pushcontent: string, 推送文案,最长500个字符，android以此为推送显示文案；ios若未填写payload，显示文案以pushcontent为准
+     * - payload: sting, ios 推送对应的payload,必须是JSON,不能超过2k字符
+     * - ext: string, 开发者扩展字段，长度限制1024字符
+     * - bid: string, 反垃圾业务ID，实现“单条消息配置对应反垃圾”，若不填则使用原来的反垃圾配置
+     * - useYidun: int, 单条消息是否使用易盾反垃圾
+     *
+     * @throws Exception
+     */
+    public function sendP2pBatch(string $fromAccid, array $toAccidList, int $type, string $body, array $options = [])
+    {
+        if (count($toAccidList) > 500) {
+            throw new Exception('接收方最多500人');
+        }
+        
+        $this->post('msg/sendBatchMsg.action', array_merge($options, [
+            'fromAccid' => $fromAccid,
+            'toAccids' => json_encode($toAccidList),
+            'type' => $type,
+            'body' => $body,
+        ]));
+    }
+    
+    /**
+     * 所有用户发送广播消息
+     *
+     * @param string $body 广播消息内容
+     * @param array $options 可选参数集合，支持以下选项:
+     *
+     * - from: string, 发送者accid, 用户帐号，最大长度32字符，必须保证一个APP内唯一
+     * - isOffline: bool, 是否存离线，true或false，默认false
+     * - ttl: int, 存离线状态下的有效期，单位小时，默认7天
+     * - targetOs: string, 目标客户端，默认所有客户端，jsonArray，例如 ["ios","aos","pc","web","mac"]
+     */
+    public function broadcast(string $body, array $options = [])
+    {
+        $this->post('msg/broadcastMsg.action', array_merge($options, ['body' => $body]));
+    }
+    
+    /**
+     * 加好友
+     *
+     * @param string $fromAccid 加好友发起者accid
+     * @param string $friendAccid 加好友接收者accid
+     * @param int $type 1直接加好友，2请求加好友，3同意加好友，4拒绝加好友
+     * @param string $msg 加好友对应的请求消息，第三方组装，最长256字符
+     * @param string $serverEx 服务器端扩展字段，限制长度256。此字段client端只读，server端读写
+     */
+    public function friendAdd(string $fromAccid, string $friendAccid, int $type, string $msg = '', string $serverEx = '')
+    {
+        $this->post('friend/add.action', [
+            'accid' => $fromAccid,
+            'faccid' => $friendAccid,
+            'type' => $type,
+            'msg' => $msg,
+            'serverex' => $serverEx,
+        ]);
+    }
+    
+    /**
+     * 更新好友信息
+     *
+     * @param string $fromAccid 发起者accid
+     * @param string $friendAccid 要修改朋友的accid
+     * @param string $alias 给好友增加备注名，限制长度128，可设置为空字符串
+     * @param string $ex 修改ex字段，限制长度256，可设置为空字符串
+     * @param string $serverEx 服务器端扩展字段，限制长度256。此字段client端只读，server端读写
+     *
+     * @throws Exception
+     */
+    public function friendUpdate(string $fromAccid, string $friendAccid, string $alias = '', string $ex = '', $serverEx = '')
+    {
+        $this->post('friend/update.action', [
+            'accid' => $fromAccid,
+            'faccid' => $friendAccid,
+            'alias' => $alias,
+            'ex' => $ex,
+            'serverex' => $serverEx,
+        ]);
+    }
+    
+    /**
+     * 删除好友
+     *
+     * @param string $accid 发起者accid
+     * @param string $friendAccid 要修改朋友的accid
+     * @param bool $isDeleteAlias 是否需要删除备注信息，false:不需要，true:需要
+     *
+     * @throws Exception
+     */
+    public function friendDelete(string $accid, string $friendAccid, bool $isDeleteAlias = false)
+    {
+        $this->post('friend/delete.action', ['accid' => $accid, 'faccid' => $friendAccid, 'isDeleteAlias' => $isDeleteAlias]);
+    }
+    
+    /**
+     * 获取好友关系列表
+     * 查询某时间点起到现在有更新的双向好友
+     *
+     * @param string $accid 发起者accid
+     * @param int $updateTime 更新时间戳，接口返回该时间戳之后有更新的好友列表
+     *
+     * @return array
+     */
+    public function friendList(string $accid, int $updateTime):array
+    {
+        $ret = $this->post('friend/get.action', ['accid' => $accid, 'updatetime' => $updateTime]);
+        return $ret['friends'] ?? [];
+    }
+    
+    /**
+     * 拉黑好友、解除拉黑
+     *
+     * @param string $accid 用户账号
+     * @param string $friendAccid 被拉黑的账号
+     * @param bool $isBlock 是否拉黑 0取消 1拉黑
+     */
+    public function friendBlack(string $accid, string $friendAccid, bool $isBlock = true)
+    {
+        $this->post('user/setSpecialRelation.action', [
+            'accid' => $accid,
+            'targetAcc' => $friendAccid,
+            'relationType' => 1,
+            'value' => (int)$isBlock,
+        ]);
+    }
+    
+    /**
+     * 查看拉黑列表
+     *
+     * @param string $accid
      *
      * @return array
      * @throws Exception
      */
-    public function getUserInfos(array $accids)
+    public function friendBlackList(string $accid)
     {
-        $ret = $this->send('user/getUinfos.action', ['accids' => json_encode($accids)]);
-        return $ret['uinfos'] ?? null;
-    }
-    
-    /**
-     * 设置桌面端在线时，移动端是否需要推送
-     *
-     * @param string $accid 用户帐号
-     * @param bool $donnopOpen 桌面端在线时，移动端是否不推送：true:移动端不需要推送，false:移动端需要推送
-     *
-     * @throws Exception
-     */
-    public function setDonnop(string $accid, bool $donnopOpen)
-    {
-        $this->send('user/setDonnop.action', ['accid' => $accid, 'donnopOpen' => $donnopOpen]);
-    }
-    
-    /**
-     * 账号全局禁言
-     *
-     * @param string $accid 用户帐号
-     * @param bool $mute 是否全局禁言：true：全局禁言，false:取消全局禁言
-     *
-     * @throws Exception
-     */
-    public function mute(string $accid, bool $mute)
-    {
-        $this->send('user/mute.action', ['accid' => $accid, 'mute' => $mute]);
-    }
-    
-    /**
-     * 账号全局禁用音视频
-     *
-     * @param string $accid 用户帐号
-     * @param bool $mute 是否全局禁言：true：全局禁言，false:取消全局禁言
-     *
-     * @throws Exception
-     */
-    public function muteAv(string $accid, bool $mute)
-    {
-        $this->send('user/muteAv.action', ['accid' => $accid, 'mute' => $mute]);
+        $ret = $this->post('user/listBlackAndMuteList.action', ['accid' => $accid]);
+        return $ret['blacklist'] ?? [];
     }
     
 }

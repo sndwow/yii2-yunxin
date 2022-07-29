@@ -8,6 +8,7 @@ namespace sndwow\yunxin;
 
 use Exception;
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * 聊天室接口
@@ -17,79 +18,74 @@ class Chatroom extends Base
     /**
      * 创建聊天室
      *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
      * @param string $creator 聊天室属主的账号accid
      * @param string $name 聊天室名称，长度限制128个字符
      * @param array $options
      *
-     * @return array
-     * @throws Exception
+     * @return int 返回聊天室id
      */
     public function create(string $creator, string $name, array $options = [])
     {
-        $ret = $this->send('chatroom/create.action', array_merge($options, ['creator' => $creator, 'name' => $name]));
-        return $ret['chatroom'] ?? null;
+        $ret = $this->post('chatroom/create.action', ArrayHelper::merge($options, ['creator' => $creator, 'name' => $name]));
+        if (empty($ret['chatroom']['roomid'])) {
+            throw new Exception('创建失败');
+        }
+        
+        return $ret['chatroom']['roomid'];
     }
     
     /**
      * 获取聊天室信息
      *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     * @param bool $needOnlineUserCount 是否需要返回在线人数，true或false，默认false
+     * @param int $roomId 聊天室id
+     * @param bool $needOnlineUserCount 是否需要返回在线人数
      *
      * @return array
-     * @throws Exception
      */
-    public function get(int $roomid, bool $needOnlineUserCount)
+    public function get(int $roomId, bool $needOnlineUserCount = true)
     {
-        $ret = $this->send('chatroom/get.action', ['creator' => $roomid, 'needOnlineUserCount' => $needOnlineUserCount]);
+        $ret = $this->post('chatroom/get.action', ['creator' => $roomId, 'needOnlineUserCount' => $needOnlineUserCount]);
         return $ret['chatroom'] ?? null;
     }
     
     /**
      * 更新聊天室信息
      *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     * @param array $options 是否需要返回在线人数，true或false，默认false
+     * @param int $roomId 聊天室id
+     * @param array $options 更新选项
      *
      * @return array
      * @throws Exception
      */
-    public function update(int $roomid, array $options = [])
+    public function update(int $roomId, array $options = [])
     {
-        $ret = $this->send('chatroom/update.action', array_merge($options, ['roomid' => $roomid]));
+        $ret = $this->post('chatroom/update.action', ArrayHelper::merge($options, ['roomid' => $roomId]));
         return $ret['chatroom'] ?? null;
     }
     
     /**
      * 修改聊天室开/关闭状态
      *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     * @param string $operator 操作者账号，必须是创建者才可以操作
-     * @param bool $valid true或false，false:关闭聊天室；true:打开聊天室
+     * @param int $roomId 聊天室id
+     * @param string $creatorId 创建者账号
+     * @param bool $isClose true 关闭 false 打开
      *
      * @return array
-     * @throws Exception
      */
-    public function toggleCloseStat(int $roomid, string $operator, bool $valid)
+    public function close(int $roomId, string $creatorId, bool $isClose)
     {
-        $ret = $this->send('chatroom/toggleCloseStat.action', ['roomid' => $roomid, 'operator' => $operator, 'valid' => $valid]);
+        $ret = $this->post('chatroom/toggleCloseStat.action', [
+            'roomid' => $roomId,
+            'operator' => $creatorId,
+            'valid' => !$isClose,
+        ]);
         return $ret['desc'] ?? null;
     }
     
     /**
-     * 设置聊天室内用户角色
+     * 设置角色
      *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
+     * @param int $roomId 聊天室id
      * @param string $operator 操作者账号accid
      * @param string $target 被操作者账号accid
      *
@@ -99,175 +95,100 @@ class Chatroom extends Base
      * -1:设为黑名单用户，operator必须是创建者或管理员
      * -2:设为禁言用户，operator必须是创建者或管理员
      *
-     * @param bool $optvalue true或false，true:设置；false:取消设置；执行“取消”设置后，若成员非禁言且非黑名单，则变成游客
+     * @param bool $optValue true或false，true:设置；false:取消设置；执行“取消”设置后，若成员非禁言且非黑名单，则变成游客
      * @param string $notifyExt 通知扩展字段，长度限制2048，请使用json格式
      *
      * @return array
      * @throws Exception
      */
-    public function setMemberRole(int $roomid, string $operator, string $target, int $opt, bool $optvalue, string $notifyExt = '')
+    public function setRole(int $roomId, string $operator, string $target, int $opt, bool $optValue, string $notifyExt = '')
     {
-        $ret = $this->send('chatroom/setMemberRole.action', [
-            'roomid' => $roomid,
+        $ret = $this->post('chatroom/setMemberRole.action', [
+            'roomid' => $roomId,
             'operator' => $operator,
             'target' => $target,
             'opt' => $opt,
-            'optvalue' => $optvalue,
+            'optvalue' => $optValue,
             'notifyExt' => $notifyExt,
         ]);
         return $ret['desc'] ?? null;
     }
     
     /**
-     * 发送聊天室消息
+     * 设置角色信息（前提是得有角色）
      *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     * @param string $fromAccid 客户端消息id，使用uuid等随机串，msgId相同的消息会被客户端去重
-     * @param int $msgType 消息发出者的账号accid
-     * @param array $options
-     *
-     * @return array
-     * @throws \yii\base\Exception
-     */
-    public function sendMsg(int $roomid, string $fromAccid, int $msgType, array $options = [])
-    {
-        $ret = $this->send('chatroom/sendMsg.action', array_merge($options, [
-            'roomid' => $roomid,
-            'fromAccid' => $fromAccid,
-            'msgType' => $msgType,
-            'msgId' => $options['msgId'] ?? Yii::$app->security->generateRandomString(),
-        ]));
-        return $ret['desc'] ?? null;
-    }
-    
-    /**
-     * 排序列出队列中所有元素
-     *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     *
-     * @return array
-     * @throws Exception
-     */
-    public function queuePoll(int $roomid)
-    {
-        $ret = $this->send('chatroom/queueList.action', ['roomid' => $roomid]);
-        return $ret['desc']['list'] ?? null;
-    }
-    
-    /**
-     * 删除清理整个队列
-     *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     *
-     * @throws Exception
-     */
-    public function queueDrop(int $roomid)
-    {
-        $this->send('chatroom/queueDrop.action', ['roomid' => $roomid]);
-    }
-    
-    /**
-     * 初始化队列
-     *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     * @param int $sizeLimit 队列长度限制，0-1000
-     *
-     * @throws Exception
-     */
-    public function queueInit(int $roomid, int $sizeLimit = 1000)
-    {
-        $this->send('chatroom/queueInit.action', ['roomid' => $roomid, 'sizeLimit' => $sizeLimit]);
-    }
-    
-    /**
-     * 往聊天室有序队列中新加或更新元素
-     *
-     * @see https://dev.yunxin.163.com/docs/product/IM%E5%8D%B3%E6%97%B6%E9%80%9A%E8%AE%AF/%E6%9C%8D%E5%8A%A1%E7%AB%AFAPI%E6%96%87%E6%A1%A3/%E8%81%8A%E5%A4%A9%E5%AE%A4?pos=toc-0-0-5
-     *
-     * @param int $roomid 聊天室id
-     * @param string $key elementKey,新元素的UniqKey,长度限制128字符
-     * @param string $value elementValue,新元素内容，长度限制4096字符
-     *
-     * @param string $operator 提交这个新元素的操作者accid，默认为该聊天室的创建者，若operator对应的帐号不存在，会返回404错误。
-     * 若指定的operator不在线，则添加元素成功后的通知事件中的操作者默认为聊天室的创建者；若指定的operator在线，则通知事件的操作者为operator。
-     *
-     * @param bool $transient
-     * 这个新元素的提交者operator的所有聊天室连接在从该聊天室掉线或者离开该聊天室的时候，提交的元素是否需要删除。
-     * true：需要删除；false：不需要删除。默认false。
-     * 当指定该参数为true时，若operator当前不在该聊天室内，则会返回403错误。
-     *
-     * @throws Exception
-     */
-    public function queueOffer(int $roomid, string $key, string $value, string $operator = '', bool $transient = false)
-    {
-        
-        $data = ['roomid' => $roomid, 'key' => $key, 'value' => $value, 'transient' => $transient];
-        if ($operator) {
-            $data['operator'] = $operator;
-        }
-        
-        $this->send('chatroom/queueOffer.action', $data);
-    }
-    
-    /**
-     * 变更聊天室内的角色信息
-     *
-     * @see https://doc.yunxin.163.com/docs/TM5MzM5Njk/TYyMDI1MTg?platformId=60353#%E5%8F%98%E6%9B%B4%E8%81%8A%E5%A4%A9%E5%AE%A4%E5%86%85%E7%9A%84%E8%A7%92%E8%89%B2%E4%BF%A1%E6%81%AF
-     *
-     * @param int $roomid
+     * @param int $roomId
      * @param string $accid
      * @param array $options
      *
-     * @return void
      * @throws Exception
      */
-    public function updateMyRoomRole(int $roomid, string $accid, array $options = [])
+    public function setRoleInfo(int $roomId, string $accid, array $options = [])
     {
-        $data = array_merge($options, ['roomid' => $roomid, 'accid' => $accid]);
-        $this->send('chatroom/updateMyRoomRole.action', $data);
+        $this->post('chatroom/updateMyRoomRole.action', ArrayHelper::merge($options, [
+            'roomid' => $roomId,
+            'accid' => $accid,
+        ]));
+    }
+    
+    /**
+     * 发送消息
+     *
+     * @param int $roomId 聊天室id
+     * @param string $accid 发起者
+     * @param int $msgType 消息发出者的账号accid
+     * @param array $options
+     *
+     * @return string
+     */
+    public function sendMsg(int $roomId, string $accid, int $msgType, array $options = [])
+    {
+        $msgId = $options['msgId'] ?? '';
+        if (!$msgId) {
+            $msgId = md5(Yii::$app->security->generateRandomString().microtime());
+        }
+        
+        $this->post('chatroom/sendMsg.action', array_merge($options, [
+            'roomid' => $roomId,
+            'fromAccid' => $accid,
+            'msgType' => $msgType,
+            'msgId' => $msgId,
+        ]));
+        
+        return (string)$msgId;
     }
     
     /**
      * 关闭指定聊天室进出通知
      *
-     * @see https://doc.yunxin.163.com/docs/TM5MzM5Njk/TYyMDI1MTg?platformId=60353#%E5%85%B3%E9%97%AD%E6%8C%87%E5%AE%9A%E8%81%8A%E5%A4%A9%E5%AE%A4%E8%BF%9B%E5%87%BA%E9%80%9A%E7%9F%A5
+     * @param int $roomId
+     * @param bool $close true：关闭进出通知，false：不关闭
      *
-     * @param int $roomid
-     * @param bool $close
-     *
-     * @return void
-     * @throws Exception
      */
-    public function updateInOutNotification(int $roomid, bool $close)
+    public function closeInOutNotice(int $roomId, bool $close)
     {
-        $this->send('chatroom/updateInOutNotification.action', ['roomid' => $roomid, 'close' => $close]);
+        $this->post('chatroom/updateInOutNotification.action', ['roomid' => $roomId, 'close' => $close]);
     }
     
     /**
-     * 聊天室全服广播消息
+     * 全服广播消息
      *
-     * @see https://doc.yunxin.163.com/docs/TM5MzM5Njk/TYyMDI1MTg?platformId=60353#聊天室全服广播消息
-     *
-     * @param int $msgId
-     * @param string $fromAccid
-     * @param int $msgType
+     * @param string $accid 发送者
+     * @param int $msgType 消息类型
      * @param array $options
      *
      * @return void
      * @throws Exception
      */
-    public function broadcast(int $msgId, string $fromAccid, int $msgType, array $options = [])
+    public function broadcast(string $accid, int $msgType, array $options = [])
     {
-        $data = array_merge($options, ['msgId' => $msgId, 'fromAccid' => $fromAccid, 'msgType' => $msgType]);
-        $this->send('chatroom/broadcast.action', $data);
+        $msgId = $options['msgId'] ?? '';
+        if (!$msgId) {
+            $msgId = md5(Yii::$app->security->generateRandomString().microtime());
+        }
+        
+        $data = array_merge($options, ['msgId' => $msgId, 'fromAccid' => $accid, 'msgType' => $msgType]);
+        $this->post('chatroom/broadcast.action', $data);
     }
     
 }

@@ -1,112 +1,63 @@
 <?php
+/**
+ *  author: youwei
+ *  date: 7/29/2022
+ */
 
 namespace sndwow\yunxin;
 
 use Exception;
 use Yii;
-use yii\base\Component;
-use yii\base\InvalidConfigException;
+use yii\base\BaseObject;
+use yii\helpers\Json;
 use yii\httpclient\Client;
 
-abstract class Base extends Component
+class Base extends BaseObject
 {
-    private $baseUrl = 'https://api.netease.im/nimserver/';
+    // 网易云信分配的账号
+    public string $appKey;
+    
+    // 网易云信分配的密钥
+    public string $appSecret;
+    
+    // 请求超时时间
+    public int $timeout = 5;
+    
+    // 网易接口基础url
+    const NET_EASE_URI = 'https://api.netease.im/nimserver/';
     
     /**
-     * @var string
-     */
-    public $appKey;
-    
-    /**
-     * @var string
-     */
-    public $appSecret;
-    
-    /**
-     * @var int
-     */
-    public $timeout;
-    
-    /**
-     * @var string 默认队列
-     */
-    public $defaultQueueId;
-    
-    /**
-     * 此刻要发送的队列，空标识不发送队列
-     *
-     * @var string
-     */
-    private $curQueueId;
-    
-    /**
-     * 设置本次消息发送为异步消息，消息将被推送到指定组件的队列中
-     * 异步发送时，所有接口都返回空值
-     *
-     * @param string $queueId Yii队列组件id，若不指定则使用默认组件id，若组件不存在则报错
-     *
-     * @return $this
-     * @throws InvalidConfigException
-     */
-    public function async(string $queueId = '')
-    {
-        $this->curQueueId = $queueId ?: $this->defaultQueueId;
-        
-        $id = $this->curQueueId;
-        
-        if (empty(Yii::$app->$id)) {
-            throw new InvalidConfigException('云信异步组件无效');
-        }
-        
-        return $this;
-    }
-    
-    /**
-     * 发送请求
-     *
-     * @param string $uri
+     * @param string $path
      * @param array $data
      *
-     * @return array|null
-     * @throws Exception
+     * @return array
      */
-    protected function send(string $uri, array $data)
+    public function post(string $path, array $data):array
     {
-    
-        $data = $this->bool2String($data);
-    
-        // 异步发送
-        if ($this->curQueueId) {
-            $id = $this->curQueueId;
         
-            /* @var \yii\queue\amqp_interop\Queue $c */
-            $c = Yii::$app->$id;
-            $c->push(['method' => $uri, 'data' => $data]);
-            $this->curQueueId = '';
-            return null;
-        }
-    
+        $data = $this->bool2String($data);
+        
         // checksum校验生成
         $nonceStr = Yii::$app->getSecurity()->generateRandomString(128);
         $curTime = (string)time();
-    
-        $response = (new Client())->post($this->baseUrl.$uri, $data, [
+        
+        $resp = (new Client())->post(self::NET_EASE_URI.$path, $data, [
             'AppKey' => $this->appKey,
             'Nonce' => $nonceStr,
             'CurTime' => $curTime,
             'CheckSum' => sha1($this->appSecret.$nonceStr.$curTime),
         ], ['timeout' => $this->timeout])->send();
-    
-        if ($response->getStatusCode() != 200) {
-            throw new Exception('NetEase Network Error: '.$response->getStatusCode());
-        }
-    
-        $arr = json_decode($response->getContent(), true);
-        if (!isset($arr['code']) || $arr['code'] != 200) {
-            throw new Exception('NetEase response error：'.$response->getContent());
+        
+        if ($resp->statusCode != 200) {
+            throw new Exception('NetEase接口错误 '.$resp->statusCode);
         }
         
-        return $arr;
+        $ret = Json::decode($resp->content);
+        if (!isset($ret['code']) || $ret['code'] != 200) {
+            throw new Exception('NetEase 返回错误：'.$resp->content);
+        }
+        
+        return $ret;
     }
     
     /**
