@@ -30,7 +30,7 @@ class Yunxin extends Component
     
     public function getChatroom()
     {
-        return new User(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return new Chatroom(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
     }
     
     /**
