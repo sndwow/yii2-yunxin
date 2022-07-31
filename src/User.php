@@ -30,6 +30,8 @@ class User extends Base
      * - mobile: string, 用户mobile，最大长度32字符
      * - gender: int, 用户性别，0表示未知，1表示男，2女表示女，其它会报参数错误
      * - ex: string, 用户名片扩展字段，最大长度1024字符，用户可自行扩展，建议封装成JSON字符串
+     *
+     * @return string token
      */
     public function create(string $accid, array $options = [])
     {
