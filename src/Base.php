@@ -52,7 +52,7 @@ class Base extends BaseObject
         }
         $ret = Json::decode($resp->content);
         if (!isset($ret['code']) || $ret['code'] != 200) {
-            Yii::error($resp->content, 'yunxin error');
+            throw new Exception($resp->content);
         }
         return $ret;
     }
