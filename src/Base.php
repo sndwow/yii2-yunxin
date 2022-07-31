@@ -94,4 +94,14 @@ class Base extends BaseObject
         return $this->error;
     }
     
+    /**
+     * 获取错误信息
+     *
+     * @return string
+     */
+    public function contentRaw()
+    {
+        return $this->contentRaw;
+    }
+    
 }
