@@ -36,7 +36,7 @@ class User extends Base
     public function create(string $accid, array $options = [])
     {
         $r = $this->post('user/create.action', ArrayHelper::merge($options, ['accid' => $accid]));
-        return $r['token'] ?? '';
+        return $r['info']['token'] ?? '';
     }
     
     /**
