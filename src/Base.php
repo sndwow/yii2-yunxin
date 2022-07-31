@@ -6,6 +6,7 @@
 
 namespace sndwow\yunxin;
 
+use Exception;
 use Yii;
 use yii\base\BaseObject;
 use yii\helpers\Json;
@@ -25,22 +26,14 @@ class Base extends BaseObject
     // 网易接口基础url
     const NET_EASE_URI = 'https://api.netease.im/nimserver/';
     
-    // 每次请求的错误信息存储在此处
-    protected array $error = [];
-    
-    // 每次返回的数据json格式
-    protected array $ret = [];
-    
-    // 每次返回的数据原始格式
-    protected string $contentRaw = '';
-    
     /**
      * @param string $path
      * @param array $data
+     *
+     * @return array
      */
     public function post(string $path, array $data)
     {
-        $this->error = [];
         $data = $this->bool2String($data);
         
         // checksum校验生成
@@ -55,13 +48,13 @@ class Base extends BaseObject
         ], ['timeout' => $this->timeout])->send();
         
         if ($resp->statusCode != 200) {
-            $this->error = ['statusCode' => $resp->statusCode, 'msg' => 'NetEase请求错误'];
+            throw new Exception('NetEase请求错误');
         }
-        $this->contentRaw = $resp->content;
-        $this->ret = Json::decode($resp->content);
-        if (!isset($this->ret['code']) || $this->ret['code'] != 200) {
-            $this->error = ['code' => $this->ret['code'], 'msg' => 'NetEase返回错误'];
+        $ret = Json::decode($resp->content);
+        if (!isset($ret['code']) || $ret['code'] != 200) {
+            Yii::error($resp->content, 'yunxin error');
         }
+        return $ret;
     }
     
     /**
@@ -83,25 +76,4 @@ class Base extends BaseObject
         
         return $data;
     }
-    
-    /**
-     * 获取错误信息
-     *
-     * @return array
-     */
-    public function error()
-    {
-        return $this->error;
-    }
-    
-    /**
-     * 获取错误信息
-     *
-     * @return string
-     */
-    public function contentRaw()
-    {
-        return $this->contentRaw;
-    }
-    
 }

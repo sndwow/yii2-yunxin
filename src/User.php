@@ -35,8 +35,8 @@ class User extends Base
      */
     public function create(string $accid, array $options = [])
     {
-        $this->post('user/create.action', ArrayHelper::merge($options, ['accid' => $accid]));
-        return $this->ret['token'] ?? '';
+        $r = $this->post('user/create.action', ArrayHelper::merge($options, ['accid' => $accid]));
+        return $r['token'] ?? '';
     }
     
     /**
@@ -44,13 +44,10 @@ class User extends Base
      *
      * @param string $accid 账户id
      * @param string $token 登录token值（即密码），最大长度128字符
-     *
-     * @return bool
      */
     public function updateToken(string $accid, string $token)
     {
         $this->post('user/update.action', ['accid' => $accid, 'token' => $token]);
-        return !$this->error();
     }
     
     /**
@@ -58,26 +55,20 @@ class User extends Base
      *
      * @param string $accid 账户id
      * @param bool $needKick 是否踢出云信
-     *
-     * @return bool
      */
     public function block(string $accid, bool $needKick = true)
     {
         $this->post('user/block.action', ['accid' => $accid, 'needkick' => $needKick]);
-        return !$this->error();
     }
     
     /**
      * 解禁用户
      *
      * @param string $accid 账户id
-     *
-     * @return bool
      */
     public function unblock(string $accid)
     {
         $this->post('user/unblock.action', ['accid' => $accid]);
-        return !$this->error();
     }
     
     /**
@@ -85,13 +76,10 @@ class User extends Base
      *
      * @param string $accid 账户id
      * @param bool $isMute 是否禁言，true禁言，false解除禁言
-     *
-     * @return bool
      */
     public function mute(string $accid, bool $isMute)
     {
         $this->post('user/mute.action', ['accid' => $accid, 'mute' => $isMute]);
-        return !$this->error();
     }
     
     /**
@@ -103,8 +91,8 @@ class User extends Base
      */
     public function info(string $accid)
     {
-        $this->post('user/getUinfos.action', ['accids' => json_encode([$accid])]);
-        return $this->ret['uinfos'][0] ?? [];
+        $r = $this->post('user/getUinfos.action', ['accids' => json_encode([$accid])]);
+        return $r['uinfos'][0] ?? [];
     }
     
     /**
@@ -116,8 +104,8 @@ class User extends Base
      */
     public function infoList(array $accids)
     {
-        $this->post('user/getUinfos.action', ['accids' => json_encode($accids)]);
-        return $ret['uinfos'] ?? [];
+        $r = $this->post('user/getUinfos.action', ['accids' => json_encode($accids)]);
+        return $r['uinfos'] ?? [];
     }
     
     /**
@@ -134,13 +122,10 @@ class User extends Base
      * - mobile: string, 用户mobile，最大长度32字符
      * - gender: int, 用户性别，0表示未知，1表示男，2女表示女，其它会报参数错误
      * - ex: string, 用户名片扩展字段，最大长度1024字符，用户可自行扩展，建议封装成JSON字符串
-     *
-     * @return bool
      */
     public function updateUserInfo(string $accid, array $options)
     {
         $this->post('user/updateUinfo.action', array_merge($options, ['accid' => $accid]));
-        return !$this->error();
     }
     
     /**
@@ -155,8 +140,6 @@ class User extends Base
      * - payload: sting, ios 推送对应的payload,必须是JSON,不能超过2k字符
      * - sound: string, 如果有指定推送，此属性指定为客户端本地的声音文件名，长度不要超过30个字符，如果不指定，会使用默认声音
      * - save: int, 1表示只发在线，2表示会存离线，其他会报414错误。默认会存离线
-     *
-     * @return bool
      */
     public function noticeSend(string $fromAccid, string $toAccid, string $attach, array $options = [])
     {
@@ -166,8 +149,6 @@ class User extends Base
             'to' => $toAccid,
             'attach' => $attach,
         ]));
-        
-        return !$this->error();
     }
     
     /**
@@ -183,8 +164,6 @@ class User extends Base
      * - payload: sting, ios 推送对应的payload,必须是JSON,不能超过2k字符
      * - sound: string, 如果有指定推送，此属性指定为客户端本地的声音文件名，长度不要超过30个字符，如果不指定，会使用默认声音
      * - save: int, 1表示只发在线，2表示会存离线，其他会报414错误。默认会存离线
-     *
-     * @return bool
      */
     public function noticeSendBatch(string $fromAccid, array $toAccidList, string $attach, array $options = [])
     {
@@ -193,8 +172,6 @@ class User extends Base
             'toAccids' => json_encode($toAccidList),
             'attach' => $attach,
         ]));
-        
-        return !$this->error();
     }
     
     /**
@@ -223,14 +200,14 @@ class User extends Base
      */
     public function p2pSend(string $fromAccid, string $toAccid, int $msgType, string $body, array $options = [])
     {
-        $this->post('msg/sendMsg.action', array_merge($options, [
+        $r = $this->post('msg/sendMsg.action', array_merge($options, [
             'from' => $fromAccid,
             'ope' => 0,
             'to' => $toAccid,
             'type' => $msgType,
             'body' => $body,
         ]));
-        return (string)($this->ret['data']['msgid'] ?? '');
+        return (string)($r['data']['msgid'] ?? '');
     }
     
     /**
@@ -258,14 +235,14 @@ class User extends Base
             throw new Exception('接收方最多500人');
         }
         
-        $this->post('msg/sendBatchMsg.action', array_merge($options, [
+        $r = $this->post('msg/sendBatchMsg.action', array_merge($options, [
             'fromAccid' => $fromAccid,
             'toAccids' => json_encode($toAccidList),
             'type' => $type,
             'body' => $body,
         ]));
         
-        return (string)($this->ret['msgids'] ?? []);
+        return (string)($r['msgids'] ?? []);
     }
     
     /**
@@ -278,13 +255,10 @@ class User extends Base
      * - isOffline: bool, 是否存离线，true或false，默认false
      * - ttl: int, 存离线状态下的有效期，单位小时，默认7天
      * - targetOs: string, 目标客户端，默认所有客户端，jsonArray，例如 ["ios","aos","pc","web","mac"]
-     *
-     * @return bool
      */
     public function broadcast(string $body, array $options = [])
     {
         $this->post('msg/broadcastMsg.action', array_merge($options, ['body' => $body]));
-        return !$this->error();
     }
     
     /**
@@ -295,8 +269,6 @@ class User extends Base
      * @param int $type 1直接加好友，2请求加好友，3同意加好友，4拒绝加好友
      * @param string $msg 加好友对应的请求消息，第三方组装，最长256字符
      * @param string $serverEx 服务器端扩展字段，限制长度256。此字段client端只读，server端读写
-     *
-     * @return bool
      */
     public function friendAdd(string $fromAccid, string $friendAccid, int $type, string $msg = '', string $serverEx = '')
     {
@@ -307,7 +279,6 @@ class User extends Base
             'msg' => $msg,
             'serverex' => $serverEx,
         ]);
-        return !$this->error();
     }
     
     /**
@@ -318,8 +289,6 @@ class User extends Base
      * @param string $alias 给好友增加备注名，限制长度128，可设置为空字符串
      * @param string $ex 修改ex字段，限制长度256，可设置为空字符串
      * @param string $serverEx 服务器端扩展字段，限制长度256。此字段client端只读，server端读写
-     *
-     * @return bool
      */
     public function friendUpdate(string $fromAccid, string $friendAccid, string $alias = '', string $ex = '', string $serverEx = '')
     {
@@ -330,8 +299,6 @@ class User extends Base
             'ex' => $ex,
             'serverex' => $serverEx,
         ]);
-        
-        return !$this->error();
     }
     
     /**
@@ -340,13 +307,10 @@ class User extends Base
      * @param string $accid 发起者accid
      * @param string $friendAccid 要修改朋友的accid
      * @param bool $isDeleteAlias 是否需要删除备注信息，false:不需要，true:需要
-     *
-     * @return bool
      */
     public function friendDelete(string $accid, string $friendAccid, bool $isDeleteAlias = false)
     {
         $this->post('friend/delete.action', ['accid' => $accid, 'faccid' => $friendAccid, 'isDeleteAlias' => $isDeleteAlias]);
-        return !$this->error();
     }
     
     /**
@@ -360,8 +324,8 @@ class User extends Base
      */
     public function friendList(string $accid, int $updateTime):array
     {
-        $this->post('friend/get.action', ['accid' => $accid, 'updatetime' => $updateTime]);
-        $json = $this->ret['friends'] ?? '';
+        $r = $this->post('friend/get.action', ['accid' => $accid, 'updatetime' => $updateTime]);
+        $json = $r['friends'] ?? '';
         return Json::decode($json);
     }
     
@@ -379,7 +343,6 @@ class User extends Base
             'relationType' => 1,
             'value' => 1,
         ]);
-        return !$this->error();
     }
     
     /**
@@ -396,7 +359,6 @@ class User extends Base
             'relationType' => 1,
             'value' => 0,
         ]);
-        return !$this->error();
     }
     
     /**
@@ -408,8 +370,8 @@ class User extends Base
      */
     public function blackList(string $accid)
     {
-        $this->post('user/listBlackAndMuteList.action', ['accid' => $accid]);
-        return $this->ret['blacklist'] ?? [];
+        $r = $this->post('user/listBlackAndMuteList.action', ['accid' => $accid]);
+        return $r['blacklist'] ?? [];
     }
     
 }

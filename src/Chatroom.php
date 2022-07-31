@@ -25,8 +25,8 @@ class Chatroom extends Base
      */
     public function create(string $creator, string $name, array $options = [])
     {
-        $this->post('chatroom/create.action', ArrayHelper::merge($options, ['creator' => $creator, 'name' => $name]));
-        return $this->ret['chatroom']['roomid'] ?? 0;
+        $r = $this->post('chatroom/create.action', ArrayHelper::merge($options, ['creator' => $creator, 'name' => $name]));
+        return (int)($r['chatroom']['roomid'] ?? 0);
     }
     
     /**
@@ -39,8 +39,8 @@ class Chatroom extends Base
      */
     public function get(int $roomId, bool $needOnlineUserCount = true)
     {
-        $this->post('chatroom/get.action', ['roomid' => $roomId, 'needOnlineUserCount' => $needOnlineUserCount]);
-        return $this->ret['chatroom'] ?? null;
+        $r = $this->post('chatroom/get.action', ['roomid' => $roomId, 'needOnlineUserCount' => $needOnlineUserCount]);
+        return $r['chatroom'] ?? null;
     }
     
     /**
@@ -48,13 +48,10 @@ class Chatroom extends Base
      *
      * @param int $roomId 聊天室id
      * @param array $options 更新选项
-     *
-     * @return bool
      */
     public function update(int $roomId, array $options = [])
     {
-       $this->post('chatroom/update.action', ArrayHelper::merge($options, ['roomid' => $roomId]));
-        return !$this->error();
+        $this->post('chatroom/update.action', ArrayHelper::merge($options, ['roomid' => $roomId]));
     }
     
     /**
@@ -63,17 +60,14 @@ class Chatroom extends Base
      * @param int $roomId 聊天室id
      * @param string $creatorId 创建者账号
      * @param bool $isClose true 关闭 false 打开
-     *
-     * @return bool
      */
     public function close(int $roomId, string $creatorId, bool $isClose)
     {
-         $this->post('chatroom/toggleCloseStat.action', [
+        $this->post('chatroom/toggleCloseStat.action', [
             'roomid' => $roomId,
             'operator' => $creatorId,
             'valid' => !$isClose,
         ]);
-        return !$this->error();
     }
     
     /**
@@ -91,12 +85,10 @@ class Chatroom extends Base
      *
      * @param bool $optValue true或false，true:设置；false:取消设置；执行“取消”设置后，若成员非禁言且非黑名单，则变成游客
      * @param string $notifyExt 通知扩展字段，长度限制2048，请使用json格式
-     *
-     * @return bool
      */
     public function setRole(int $roomId, string $operator, string $target, int $opt, bool $optValue, string $notifyExt = '')
     {
-       $this->post('chatroom/setMemberRole.action', [
+        $this->post('chatroom/setMemberRole.action', [
             'roomid' => $roomId,
             'operator' => $operator,
             'target' => $target,
@@ -104,7 +96,6 @@ class Chatroom extends Base
             'optvalue' => $optValue,
             'notifyExt' => $notifyExt,
         ]);
-        return !$this->error();
     }
     
     /**
@@ -113,8 +104,6 @@ class Chatroom extends Base
      * @param int $roomId
      * @param string $accid
      * @param array $options
-     *
-     * @return bool
      */
     public function setRoleInfo(int $roomId, string $accid, array $options = [])
     {
@@ -122,7 +111,6 @@ class Chatroom extends Base
             'roomid' => $roomId,
             'accid' => $accid,
         ]));
-        return !$this->error();
     }
     
     /**
@@ -132,8 +120,6 @@ class Chatroom extends Base
      * @param string $accid 发起者
      * @param int $msgType 消息发出者的账号accid
      * @param array $options
-     *
-     * @return bool
      */
     public function sendMsg(int $roomId, string $accid, int $msgType, array $options = [])
     {
@@ -148,8 +134,6 @@ class Chatroom extends Base
             'msgType' => $msgType,
             'msgId' => $msgId,
         ]));
-    
-        return !$this->error();
     }
     
     /**
@@ -157,13 +141,10 @@ class Chatroom extends Base
      *
      * @param int $roomId
      * @param bool $close true：关闭进出通知，false：不关闭
-     *
-     * @return bool
      */
     public function closeInOutNotice(int $roomId, bool $close)
     {
         $this->post('chatroom/updateInOutNotification.action', ['roomid' => $roomId, 'close' => $close]);
-        return !$this->error();
     }
     
     /**
@@ -172,8 +153,6 @@ class Chatroom extends Base
      * @param string $accid 发送者
      * @param int $msgType 消息类型
      * @param array $options
-     *
-     * @return bool
      */
     public function broadcast(string $accid, int $msgType, array $options = [])
     {
@@ -184,7 +163,6 @@ class Chatroom extends Base
         
         $data = array_merge($options, ['msgId' => $msgId, 'fromAccid' => $accid, 'msgType' => $msgType]);
         $this->post('chatroom/broadcast.action', $data);
-        return !$this->error();
     }
     
 }
