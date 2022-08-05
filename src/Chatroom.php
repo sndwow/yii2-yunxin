@@ -8,6 +8,7 @@ namespace sndwow\yunxin;
 
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 
 /**
  * 聊天室接口
@@ -133,6 +134,31 @@ class Chatroom extends Base
             'fromAccid' => $accid,
             'msgType' => $msgType,
             'msgId' => $msgId,
+        ]));
+    }
+    
+    /**
+     * 发送定向消息
+     *
+     * @param int $roomId 聊天室id
+     * @param string $accid 发起者
+     * @param int $msgType 消息发出者的账号accid
+     * @param array $toAccids
+     * @param array $options
+     */
+    public function sendMsgToSomeone(int $roomId, string $accid, int $msgType, array $toAccids, array $options = [])
+    {
+        $msgId = $options['msgId'] ?? '';
+        if (!$msgId) {
+            $msgId = md5(Yii::$app->security->generateRandomString().microtime());
+        }
+        
+        $this->post('chatroom/sendMsgToSomeone.action', array_merge($options, [
+            'roomid' => $roomId,
+            'fromAccid' => $accid,
+            'msgType' => $msgType,
+            'msgId' => $msgId,
+            'toAccids' => Json::encode($toAccids),
         ]));
     }
     
