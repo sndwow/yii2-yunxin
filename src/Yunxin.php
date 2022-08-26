@@ -6,6 +6,7 @@
 
 namespace sndwow\yunxin;
 
+use Yii;
 use yii\base\Component;
 
 /**
@@ -23,14 +24,27 @@ class Yunxin extends Component
     // 请求超时时间
     public int $timeout = 5;
     
+    public array $queue = [];
+    
+    
     public function getUser()
     {
-        return new User(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return Yii::createObject(User::class, [
+            'appKey' => $this->appKey,
+            'appSecret' => $this->appSecret,
+            'timeout' => $this->timeout,
+            'queue'=>$this->queue
+        ]);
     }
     
     public function getChatroom()
     {
-        return new Chatroom(['appKey' => $this->appKey, 'appSecret' => $this->appSecret, 'timeout' => $this->timeout]);
+        return Yii::createObject(Chatroom::class, [
+            'appKey' => $this->appKey,
+            'appSecret' => $this->appSecret,
+            'timeout' => $this->timeout,
+            'queue' => $this->queue
+        ]);
     }
     
     /**

@@ -8,11 +8,13 @@ namespace sndwow\yunxin;
 
 use Exception;
 use Yii;
-use yii\base\BaseObject;
+use yii\base\Component;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use yii\httpclient\Client;
+use yii\queue\Queue;
 
-class Base extends BaseObject
+class Base extends Component
 {
     // 网易云信分配的账号
     public string $appKey;
@@ -26,6 +28,39 @@ class Base extends BaseObject
     // 网易接口基础url
     const NET_EASE_URI = 'https://api.netease.im/nimserver/';
     
+    protected bool $isAsync = false;
+    
+    public array $queue = [];
+    
+    protected Queue|null $_queue = null;
+    
+    public function init()
+    {
+        if ($this->queue) {
+            $class = $this->queue['class'];
+            unset($this->queue['class']);
+            $this->_queue = Yii::createObject($class, ArrayHelper::merge($this->queue,[
+                'class' => yii\queue\amqp_interop\Queue::class,
+                'as log' => yii\queue\LogBehavior::class,
+                'strictJobType' => false,
+                'serializer' => \yii\queue\serializers\JsonSerializer::class,
+                'qosPrefetchCount' => 500,
+            ]));
+        }
+    }
+    
+    /**
+     * 是否异步发送
+     * 若开启异步，将会发送到队列
+     *
+     * @return $this
+     */
+    public function async()
+    {
+        $this->isAsync = true;
+        return $this;
+    }
+    
     /**
      * @param string $path
      * @param array $data
@@ -35,6 +70,12 @@ class Base extends BaseObject
     public function post(string $path, array $data)
     {
         $data = $this->bool2String($data);
+        
+        if ($this->isAsync) {
+            $this->_queue->push(['method' => $path, 'data' => $data]);
+            $this->isAsync = false;
+            return [];
+        }
         
         // checksum校验生成
         $nonceStr = Yii::$app->getSecurity()->generateRandomString(128);
