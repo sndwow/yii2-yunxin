@@ -55,9 +55,9 @@ class Base extends Component
      *
      * @return $this
      */
-    public function async()
+    public function async(bool $async = true)
     {
-        $this->isAsync = true;
+        $this->isAsync = $async;
         return $this;
     }
     
