@@ -16,10 +16,10 @@ use yii\base\Component;
 class Yunxin extends Component
 {
     // 网易云信分配的账号
-    public string $appKey;
+    public ?string $appKey=null;
     
     // 网易云信分配的密钥
-    public string $appSecret;
+    public ?string $appSecret=null;
     
     // 请求超时时间
     public int $timeout = 5;
