@@ -9,10 +9,9 @@ namespace sndwow\yunxin;
 use Exception;
 use Yii;
 use yii\base\Component;
-use yii\helpers\ArrayHelper;
+use yii\di\ServiceLocator;
 use yii\helpers\Json;
 use yii\httpclient\Client;
-use yii\queue\Queue;
 
 class Base extends Component
 {
@@ -25,27 +24,20 @@ class Base extends Component
     // 请求超时时间
     public int $timeout = 5;
     
+    public array $queue = [];
+    
     // 网易接口基础url
     const NET_EASE_URI = 'https://api.netease.im/nimserver/';
     
     protected bool $isAsync = false;
     
-    public array $queue = [];
-    
-    protected Queue|null $_queue = null;
+    private ServiceLocator $locator;
     
     public function init()
     {
+        $this->locator = new ServiceLocator();
         if ($this->queue) {
-            $class = $this->queue['class'];
-            unset($this->queue['class']);
-            $this->_queue = Yii::createObject($class, ArrayHelper::merge($this->queue,[
-                'class' => yii\queue\amqp_interop\Queue::class,
-                'as log' => yii\queue\LogBehavior::class,
-                'strictJobType' => false,
-                'serializer' => \yii\queue\serializers\JsonSerializer::class,
-                'qosPrefetchCount' => 500,
-            ]));
+            $this->locator->set('queue', $this->queue);
         }
     }
     
@@ -69,24 +61,31 @@ class Base extends Component
      */
     public function post(string $path, array $data)
     {
-        $data = $this->bool2String($data);
-        
-        if ($this->isAsync) {
-            $this->_queue->push(['method' => $path, 'data' => $data]);
-            $this->isAsync = false;
-            return [];
-        }
         
         // checksum校验生成
         $nonceStr = Yii::$app->getSecurity()->generateRandomString(128);
         $curTime = (string)time();
         
-        $resp = (new Client())->post(self::NET_EASE_URI.$path, $data, [
+        $url = self::NET_EASE_URI.$path;
+        $header = [
             'AppKey' => $this->appKey,
             'Nonce' => $nonceStr,
             'CurTime' => $curTime,
             'CheckSum' => sha1($this->appSecret.$nonceStr.$curTime),
-        ], ['timeout' => $this->timeout])->send();
+        ];
+        $data = $this->bool2String($data);
+        
+        if ($this->isAsync) {
+            
+            /* @var yii\queue\amqp_interop\Queue $queue */
+            $queue = $this->locator->get('queue');
+            $queue->push(['url' => $url, 'header' => $header, 'data' => $data]);
+            
+            $this->isAsync = false;
+            return [];
+        }
+        
+        $resp = (new Client())->post($url, $data, $header, ['timeout' => $this->timeout])->send();
         
         if ($resp->statusCode != 200) {
             throw new Exception('NetEase请求错误');

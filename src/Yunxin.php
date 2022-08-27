@@ -8,6 +8,8 @@ namespace sndwow\yunxin;
 
 use Yii;
 use yii\base\Component;
+use yii\di\ServiceLocator;
+use yii\helpers\ArrayHelper;
 
 /**
  * @property User $user
@@ -16,35 +18,59 @@ use yii\base\Component;
 class Yunxin extends Component
 {
     // 网易云信分配的账号
-    public ?string $appKey=null;
+    public ?string $appKey = null;
     
     // 网易云信分配的密钥
-    public ?string $appSecret=null;
+    public ?string $appSecret = null;
     
     // 请求超时时间
     public int $timeout = 5;
     
     public array $queue = [];
     
+    private ServiceLocator $locator;
+    
+    public function init()
+    {
+        $this->locator = new ServiceLocator();
+        
+        $queue = [];
+        if ($this->queue) {
+            $queue = ArrayHelper::merge($this->queue, [
+                'class' => yii\queue\amqp_interop\Queue::class,
+                'as log' => yii\queue\LogBehavior::class,
+                'strictJobType' => false,
+                'serializer' => \yii\queue\serializers\JsonSerializer::class,
+                'qosPrefetchCount' => 500,
+            ]);
+        }
+        
+        $this->locator->setComponents([
+            'user' => [
+                'class' => User::class,
+                'appKey' => $this->appKey,
+                'appSecret' => $this->appSecret,
+                'timeout' => $this->timeout,
+                'queue' => $queue,
+            ],
+            'chatroom' => [
+                'class' => Chatroom::class,
+                'appKey' => $this->appKey,
+                'appSecret' => $this->appSecret,
+                'timeout' => $this->timeout,
+                'queue' => $queue,
+            ],
+        ]);
+    }
     
     public function getUser()
     {
-        return Yii::createObject(User::class, [
-            'appKey' => $this->appKey,
-            'appSecret' => $this->appSecret,
-            'timeout' => $this->timeout,
-            'queue'=>$this->queue
-        ]);
+        return $this->locator->get('user');
     }
     
     public function getChatroom()
     {
-        return Yii::createObject(Chatroom::class, [
-            'appKey' => $this->appKey,
-            'appSecret' => $this->appSecret,
-            'timeout' => $this->timeout,
-            'queue' => $this->queue
-        ]);
+        return $this->locator->get('chatroom');
     }
     
     /**
