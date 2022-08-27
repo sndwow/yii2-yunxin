@@ -68,6 +68,7 @@ class Base extends Component
         
         $url = self::NET_EASE_URI.$path;
         $header = [
+            'Charset' => 'utf-8',
             'AppKey' => $this->appKey,
             'Nonce' => $nonceStr,
             'CurTime' => $curTime,
@@ -79,7 +80,12 @@ class Base extends Component
             
             /* @var yii\queue\amqp_interop\Queue $queue */
             $queue = $this->locator->get('queue');
-            $queue->push(['url' => $url, 'header' => $header, 'data' => $data]);
+            $queue->push([
+                'url' => $url,
+                'method' => 'POST',
+                'header' => $header,
+                'data' => $data,
+            ]);
             
             $this->isAsync = false;
             return [];
