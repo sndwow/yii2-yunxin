@@ -9,7 +9,6 @@ namespace sndwow\yunxin;
 use Yii;
 use yii\base\Component;
 use yii\di\ServiceLocator;
-use yii\helpers\ArrayHelper;
 
 /**
  * @property User $user
@@ -36,13 +35,7 @@ class Yunxin extends Component
         
         $queue = [];
         if ($this->queue) {
-            $queue = ArrayHelper::merge($this->queue, [
-                'class' => yii\queue\amqp_interop\Queue::class,
-                'as log' => yii\queue\LogBehavior::class,
-                'strictJobType' => false,
-                'serializer' => \yii\queue\serializers\JsonSerializer::class,
-                'qosPrefetchCount' => 500,
-            ]);
+            $queue = Yii::createObject($this->queue);
         }
         
         $this->locator->setComponents([

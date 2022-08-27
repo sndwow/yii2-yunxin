@@ -9,7 +9,7 @@ namespace sndwow\yunxin;
 use Exception;
 use Yii;
 use yii\base\Component;
-use yii\di\ServiceLocator;
+use yii\base\NotSupportedException;
 use yii\helpers\Json;
 use yii\httpclient\Client;
 
@@ -24,22 +24,12 @@ class Base extends Component
     // 请求超时时间
     public int $timeout = 5;
     
-    public array $queue = [];
+    public yii\queue\amqp_interop\Queue|null $queue = null;
     
     // 网易接口基础url
     const NET_EASE_URI = 'https://api.netease.im/nimserver/';
     
     protected bool $isAsync = false;
-    
-    private ServiceLocator $locator;
-    
-    public function init()
-    {
-        $this->locator = new ServiceLocator();
-        if ($this->queue) {
-            $this->locator->set('queue', $this->queue);
-        }
-    }
     
     /**
      * 是否异步发送
@@ -78,9 +68,11 @@ class Base extends Component
         
         if ($this->isAsync) {
             
-            /* @var yii\queue\amqp_interop\Queue $queue */
-            $queue = $this->locator->get('queue');
-            $queue->push([
+            if (!$this->queue) {
+                throw new NotSupportedException('未配置异步队列');
+            }
+            
+            $this->queue->push([
                 'url' => $url,
                 'method' => 'POST',
                 'header' => $header,
