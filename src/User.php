@@ -242,7 +242,7 @@ class User extends Base
             'body' => $body,
         ]));
         
-        return (string)($r['msgids'] ?? []);
+        return $r['msgids'] ?? [];
     }
     
     /**
