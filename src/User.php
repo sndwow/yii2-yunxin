@@ -155,7 +155,7 @@ class User extends Base
      * 发送通知 - 批量
      *
      * @param string $fromAccid 发送者accid，用户帐号，最大32字符，APP内唯一
-     * @param array $toAccidList 接收者 最大限500人
+     * @param array $toAccidList 接收者 最大限5000人
      * @param string $attach 自定义通知内容，第三方组装的字符串，建议是JSON串，最大长度4096字符
      * @param array $options 可选参数集合，支持以下选项:
      *

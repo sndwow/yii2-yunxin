@@ -7,6 +7,8 @@
 namespace sndwow\yunxin;
 
 use Yii;
+use yii\base\Exception;
+use yii\base\NotSupportedException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 
@@ -134,6 +136,26 @@ class Chatroom extends Base
             'fromAccid' => $accid,
             'msgType' => $msgType,
             'msgId' => $msgId,
+        ]));
+    }
+    
+    /**
+     * 发送消息 - 批量
+     *
+     * @param int $roomId 聊天室id
+     * @param array $msgList
+     * @param string $accid 发起者
+     * @param array $options
+     *
+     * @throws Exception
+     * @throws NotSupportedException
+     */
+    public function sendMsgBatch(int $roomId,array $msgList, string $accid, array $options = [])
+    {
+        $this->post('chatroom/batchSendMsg.action', array_merge($options, [
+            'roomid' => $roomId,
+            'fromAccid' => $accid,
+            'msgList' => Json::encode($msgList),
         ]));
     }
     

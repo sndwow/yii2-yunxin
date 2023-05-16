@@ -8,7 +8,6 @@ namespace sndwow\yunxin;
 
 use Yii;
 use yii\base\Component;
-use yii\di\ServiceLocator;
 
 /**
  * @property User $user
@@ -27,43 +26,33 @@ class Yunxin extends Component
     
     public array $queue = [];
     
-    private ServiceLocator $locator;
-    
-    public function init()
-    {
-        $this->locator = new ServiceLocator();
-        
-        $queue = [];
-        if ($this->queue) {
-            $queue = Yii::createObject($this->queue);
-        }
-        
-        $this->locator->setComponents([
-            'user' => [
-                'class' => User::class,
-                'appKey' => $this->appKey,
-                'appSecret' => $this->appSecret,
-                'timeout' => $this->timeout,
-                'queue' => $queue,
-            ],
-            'chatroom' => [
-                'class' => Chatroom::class,
-                'appKey' => $this->appKey,
-                'appSecret' => $this->appSecret,
-                'timeout' => $this->timeout,
-                'queue' => $queue,
-            ],
-        ]);
-    }
+    private ?User $_user = null;
+    private ?Chatroom $_chatroom = null;
     
     public function getUser()
     {
-        return $this->locator->get('user');
+        if (!$this->_user) {
+            $q = $this->queue;
+            $this->_user = new User();
+            $this->_user->appKey = $this->appKey;
+            $this->_user->appSecret = $this->appSecret;
+            $this->_user->timeout = $this->timeout;
+            $this->_user->queue = Yii::$app->$q;
+        }
+        return $this->_user;
     }
     
     public function getChatroom()
     {
-        return $this->locator->get('chatroom');
+        if (!$this->_chatroom) {
+            $q = $this->queue;
+            $this->_chatroom = new Chatroom();
+            $this->_chatroom->appKey = $this->appKey;
+            $this->_chatroom->appSecret = $this->appSecret;
+            $this->_chatroom->timeout = $this->timeout;
+            $this->_chatroom->queue = Yii::$app->$q;
+        }
+        return $this->_user;
     }
     
     /**
