@@ -26,8 +26,6 @@ class Yunxin extends BaseObject
     
     public function init()
     {
-        parent::init();
-        
         $this->locator = new ServiceLocator();
         $this->locator->set('user', [
             'class' => User::class,
