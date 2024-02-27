@@ -31,7 +31,7 @@ class Chatroom extends Base
         $r = $this->post('chatroom/create.action', ArrayHelper::merge($options, ['creator' => $creator, 'name' => $name]));
         return (int)($r['chatroom']['roomid'] ?? 0);
     }
-    
+
     /**
      * 获取聊天室信息
      *
@@ -45,7 +45,7 @@ class Chatroom extends Base
         $r = $this->post('chatroom/get.action', ['roomid' => $roomId, 'needOnlineUserCount' => $needOnlineUserCount]);
         return $r['chatroom'] ?? null;
     }
-    
+
     /**
      * 更新聊天室信息
      *
@@ -56,7 +56,7 @@ class Chatroom extends Base
     {
         $this->post('chatroom/update.action', ArrayHelper::merge($options, ['roomid' => $roomId]));
     }
-    
+
     /**
      * 修改聊天室开/关闭状态
      *
@@ -72,7 +72,7 @@ class Chatroom extends Base
             'valid' => !$isClose,
         ]);
     }
-    
+
     /**
      * 设置角色
      *
@@ -100,7 +100,7 @@ class Chatroom extends Base
             'notifyExt' => $notifyExt,
         ]);
     }
-    
+
     /**
      * 设置角色信息（前提是得有角色）
      *
@@ -115,7 +115,7 @@ class Chatroom extends Base
             'accid' => $accid,
         ]));
     }
-    
+
     /**
      * 发送消息
      *
@@ -130,7 +130,7 @@ class Chatroom extends Base
         if (!$msgId) {
             $msgId = md5(Yii::$app->security->generateRandomString().microtime());
         }
-        
+
         $this->post('chatroom/sendMsg.action', array_merge($options, [
             'roomid' => $roomId,
             'fromAccid' => $accid,
@@ -138,7 +138,7 @@ class Chatroom extends Base
             'msgId' => $msgId,
         ]));
     }
-    
+
     /**
      * 发送消息 - 批量
      *
@@ -158,7 +158,7 @@ class Chatroom extends Base
             'msgList' => Json::encode($msgList),
         ]));
     }
-    
+
     /**
      * 发送定向消息
      *
@@ -174,7 +174,7 @@ class Chatroom extends Base
         if (!$msgId) {
             $msgId = md5(Yii::$app->security->generateRandomString().microtime());
         }
-        
+
         $this->post('chatroom/sendMsgToSomeone.action', array_merge($options, [
             'roomid' => $roomId,
             'fromAccid' => $accid,
@@ -183,7 +183,7 @@ class Chatroom extends Base
             'toAccids' => Json::encode($toAccids),
         ]));
     }
-    
+
     /**
      * 关闭指定聊天室进出通知
      *
@@ -194,7 +194,7 @@ class Chatroom extends Base
     {
         $this->post('chatroom/updateInOutNotification.action', ['roomid' => $roomId, 'close' => $close]);
     }
-    
+
     /**
      * 全服广播消息
      *
@@ -208,9 +208,33 @@ class Chatroom extends Base
         if (!$msgId) {
             $msgId = md5(Yii::$app->security->generateRandomString().microtime());
         }
-        
+
         $data = array_merge($options, ['msgId' => $msgId, 'fromAccid' => $accid, 'msgType' => $msgType]);
         $this->post('chatroom/broadcast.action', $data);
     }
-    
+
+    /**
+     * 聊天室云端历史消息查询
+     *
+     * @param int $roomId 聊天室ID
+     * @param string $accid 用户账号
+     * @param int $timeTag 查询的时间戳锚点，13位。reverse=1时timeTag为起始时间戳，reverse=2时timeTag为终止时间戳
+     * @param int $limit 本次查询的消息条数上限(最多200条),小于等于0，或者大于200，会提示参数错误
+     * @param int $reverse 1按时间正序排列，2按时间降序排列。其它返回参数414错误。默认是2按时间降序排列
+     * @param string $type 查询指定的多个消息类型，类型之间用","分割，不设置该参数则查询全部类型消息。格式示例： 0,1,2,3
+     * 支持的消息类型：0:文本，1:图片，2:语音，3:视频，4:地理位置，5:通知，6:文件，10:提示，11:智能机器人消息，100:自定义消息。用英文逗号分隔。
+     * @return array
+     * @throws NotSupportedException
+     */
+    public function queryChatroomMsg(int $roomId, string $accid, int $timeTag, int $limit, int $reverse = 2, string $type = '')
+    {
+        return $this->post('history/queryChatroomMsg.action', [
+            'roomid' => $roomId,
+            'accid' => $accid,
+            'timetag' => $timeTag,
+            'limit' => $limit,
+            'reverse' => $reverse,
+            'type' => $type,
+        ]);
+    }
 }
