@@ -20,10 +20,10 @@ class Yunxin extends BaseObject
     public ?string $appSecret = null; // 网易云信分配的密钥
     public int $timeout = 5; // 请求超时时间
     public array $queue = [];
-    
+
     private ?object $_queue = null;
     private ServiceLocator $locator;
-    
+
     public function init()
     {
         $this->locator = new ServiceLocator();
@@ -31,36 +31,34 @@ class Yunxin extends BaseObject
             'class' => User::class,
             'appKey' => $this->appKey,
             'appSecret' => $this->appSecret,
-            'timeout' => $this->timeout,
-            'queue' => $this->queue(),
+            'timeout' => $this->timeout
         ]);
         $this->locator->set('chatroom', [
             'class' => Chatroom::class,
             'appKey' => $this->appKey,
             'appSecret' => $this->appSecret,
-            'timeout' => $this->timeout,
-            'queue' => $this->queue(),
+            'timeout' => $this->timeout
         ]);
     }
-    
+
     public function __get($name)
     {
         return $this->locator->get($name);
     }
-    
+
     private function queue()
     {
         if (!$this->queue) {
             return null;
         }
-        
+
         if (!$this->_queue) {
             $this->_queue = Yii::createObject($this->queue);
         }
-        
+
         return $this->_queue;
     }
-    
+
     /**
      * 抄送消息验证检验码
      *
